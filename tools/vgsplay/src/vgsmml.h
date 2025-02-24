@@ -37,6 +37,8 @@ struct VgsBgmData* vgsmml_compile_from_memory2(const void* data, size_t size, st
 void vgsmml_free_bgm_data(struct VgsBgmData* data);
 #endif
 
+extern int mml_tempo_speed;
+
 #ifdef __cplusplus
 };
 #endif

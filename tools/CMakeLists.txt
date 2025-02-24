@@ -109,3 +109,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_NAME}")
 project(${PROJECT_NAME} C CXX)
 add_executable(${PROJECT_NAME} ${SOURCES}) 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+
+#=====================================================================================
+# vgsplay
+#=====================================================================================
+set(PROJECT_NAME vgsplay)
+file(GLOB SOURCES "${PROJECT_NAME}/src/*.c"
+    "${PROJECT_NAME}/src/BufferQueue.cpp"
+    "${PROJECT_NAME}/src/sound-sdl2.cpp"
+    "${PROJECT_NAME}/src/vgsplay.cpp")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_NAME}")
+project(${PROJECT_NAME} C CXX)
+add_executable(${PROJECT_NAME} ${SOURCES}) 
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+
+# SDL2
+# Memo) Windows environment
+#       set the path to the environment variable SDL2_ROOT.
+find_package(SDL2 REQUIRED)
+include_directories(${PROJECT_NAME} ${SDL2_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})

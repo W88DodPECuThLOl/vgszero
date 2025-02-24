@@ -24,15 +24,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#if defined(_MSC_VER)
+#include "sound-sdl2.h"
+#include <chrono>
+#include <thread>
+#define strcasecmp stricmp
+#include <windows.h>
+#else
 #include "sound-ios.h"
+#include <pthread.h>
+#include <unistd.h>
+#endif
 #include "vgsdec.h"
 #include "vgsmml.h"
 #include <ctype.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #ifdef __APPLE__
 #include <IOKit/hid/IOHIDManager.h>
@@ -157,7 +165,11 @@ void* playThread(void* arg)
         vgsdec_execute(fs_vgsdec, sbuf, sizeof(sbuf));
         sound_enqueue(fs_sound, sbuf, sizeof(sbuf));
         while (playThreadFlag && 4096 < sound_buffer_left(fs_sound)) {
-            usleep(1000);
+#if defined(_MSC_VER)
+        std::this_thread::sleep_for(std::chrono::microseconds(1000));
+#else
+        usleep(1000);
+#endif
         }
         if (playThreadFlag) {
             if (fadeout && playThreadLoop == vgsdec_get_value(fs_vgsdec, VGSDEC_REG_LOOP_COUNT)) {
@@ -195,7 +207,9 @@ static void play(struct PlayList* list)
     }
     vgsmml_free_bgm_data(bgm);
     puts("OK");
+#if !defined(_MSC_VER)
     pthread_t tid;
+#endif
     playThreadFlag = true;
     playThreadLoop = list->loop;
 #ifdef __APPLE__
@@ -206,20 +220,34 @@ static void play(struct PlayList* list)
     if (fs_initialJump) {
         vgsdec_set_value(fs_vgsdec, VGSDEC_REG_TIME, fs_initialJump * 22050);
     }
+
+#if defined(_MSC_VER)
+    std::thread tid(playThread, nullptr);
+    SetThreadPriority(tid.native_handle(), THREAD_PRIORITY_HIGHEST);
+#else
     pthread_create(&tid, NULL, playThread, NULL);
     struct sched_param param;
     memset(&param, 0, sizeof(param));
     param.sched_priority = 46;
     pthread_setschedparam(tid, SCHED_OTHER, &param);
+#endif
 #ifdef __APPLE__
     CFRunLoopRun(); // Wait for HALT playing
 #else
     while (!haltPlaying) {
+#if defined(_MSC_VER)
+        std::this_thread::sleep_for(std::chrono::microseconds(1000));
+#else
         usleep(1000);
+#endif
     }
 #endif
     playThreadFlag = false;
+#if defined(_MSC_VER)
+    tid.join();
+#else
     pthread_join(tid, NULL);
+#endif
 }
 
 int main(int argc, char* argv[])

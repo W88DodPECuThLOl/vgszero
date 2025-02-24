@@ -16,6 +16,10 @@
 #define __stdcall
 #endif
 
+#ifdef _WIN32
+#pragma comment(lib, "Ws2_32.lib") // ntohs()
+#endif
+
 /*
  *----------------------------------------------------------------------------
  * Interface functions
