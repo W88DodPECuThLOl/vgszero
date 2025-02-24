@@ -4,7 +4,15 @@
 #include "../device.h"
 #include "../CPU/nes_cpu.h"
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 extern const short rom_tndtable[65536];
+
+#if defined(__cplusplus)
+}
+#endif
 
 namespace xgm
 {
