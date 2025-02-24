@@ -7,13 +7,19 @@
 #include "vgs0.hpp"
 #include <chrono>
 #include <map>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-#include <unistd.h>
 #include <vector>
+#if defined(_MSC_VER)
+#include <mutex>
+#include <thread>
+#define strcasecmp stricmp
+#else
+#include <pthread.h>
+#include <unistd.h>
+#endif
 
 #define WINDOW_TITLE "VGS-Zero for SDL2"
 
@@ -44,7 +50,11 @@ typedef struct BitmapHeader_ {
     unsigned int inum;     /* 重要色数 */
 } BitmapHeader;
 
+#if defined(_MSC_VER)
+static std::mutex soundMutex;
+#else
 static pthread_mutex_t soundMutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 static bool halt = false;
 static bool disasm = false;
 
@@ -70,14 +80,22 @@ static void log(const char* format, ...)
 static void audioCallback(void* userdata, Uint8* stream, int len)
 {
     VGS0* vgs0 = (VGS0*)userdata;
+#if defined(_MSC_VER)
+    std::lock_guard<std::mutex> lock(soundMutex);
+#else
     pthread_mutex_lock(&soundMutex);
+#endif
     if (halt) {
+#if !defined(_MSC_VER)
         pthread_mutex_unlock(&soundMutex);
+#endif
         return;
     }
     void* buf = vgs0->tickSound(len);
     memcpy(stream, buf, len);
+#if !defined(_MSC_VER)
     pthread_mutex_unlock(&soundMutex);
+#endif
 }
 
 static inline unsigned char bit5To8(unsigned char bit5)
@@ -608,9 +626,17 @@ int main(int argc, char* argv[])
         }
 
         // execute emulator 1 frame
+#if defined(_MSC_VER)
+        soundMutex.lock();
+#else
         pthread_mutex_lock(&soundMutex);
+#endif
         vgs0.tick(key1);
+#if defined(_MSC_VER)
+        soundMutex.unlock();
+#else
         pthread_mutex_unlock(&soundMutex);
+#endif
         if (vgs0.cpu->reg.IFF & 0x80) {
             if (0 == (vgs0.cpu->reg.IFF & 0x01)) {
                 log("Detected the HALT while DI");
@@ -650,7 +676,11 @@ int main(int argc, char* argv[])
         int us = (int)(diff.count() * 1000000);
         int wait = waitFps60[loopCount % 3];
         if (us < wait) {
+#if defined(_MSC_VER)
+            std::this_thread::sleep_for(std::chrono::microseconds(wait - us));
+#else
             usleep(wait - us);
+#endif
             if (!stabled) {
                 stabled = true;
                 log("Frame rate stabilized at 60 fps (%dus per frame)", us);
