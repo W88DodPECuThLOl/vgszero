@@ -256,7 +256,11 @@ class Z80
     }
 #endif
 
+#if defined(_MSC_VER)
+    struct Callbacks {
+#else
     struct Callback {
+#endif
 #ifdef Z80_NO_FUNCTIONAL
         unsigned char (*read)(void*, unsigned short);
         void (*write)(void*, unsigned short, unsigned char);
