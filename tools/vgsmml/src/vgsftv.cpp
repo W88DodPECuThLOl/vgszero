@@ -173,7 +173,7 @@ extern "C" int vgsftv(const void* notes, size_t notesSize, void** ftv, size_t* f
     *ftvSize = readWriteNotes((const char*)notes, notesSize, nullptr, &length, &loop) + 16;
     printf("song-length: %s\n", toTimeStr(length));
     printf("loop-position: %s\n", toTimeStr(loop));
-    printf("ftv-size: %lu bytes\n", *ftvSize);
+    printf("ftv-size: %zu bytes\n", *ftvSize);
     char* result = (char*)malloc(*ftvSize);
     if (!result) {
         return -1;

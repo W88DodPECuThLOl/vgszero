@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
         }
         return 2;
     }
-    printf("bgm-size: %ld bytes\n", bgm->size);
+    printf("bgm-size: %zd bytes\n", bgm->size);
 
     vgsftv(bgm->data, bgm->size, &ftv, &ftvSize);
 
