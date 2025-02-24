@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
             while (isdigit(*cp)) cp++;
         }
     }
-    printf("wrote %ld byte(s)\n", size);
+    printf("wrote %zu byte(s)\n", size);
     fclose(out);
     fclose(in);
     return 0;
