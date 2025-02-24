@@ -16,6 +16,7 @@
 #include <map>
 #include <algorithm>
 #include <list>
+#include <string>
 
 enum class TokenType {
     None,            // トークンが無い
